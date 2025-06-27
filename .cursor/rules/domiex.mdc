@@ -1,0 +1,22 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+BIBLIOTECA DE COMPONENTES DOMIEX (o projeto completo encontra-se na raiz deste projeto na pasta template-domiex )
+
+Foi criado uma biblioteca completa de componentes de formulário baseada no template Domiex! 
+
+Aqui está o que foi implementado:
+🎯 O que foi criado:
+1) DomiexForm.tsx - 7 componentes básicos
+2) DomiexCustomSelect.tsx - Select avançado com react-select
+3) FormExemplos.tsx - Página de demonstração completa
+
+📋 Para você encontrar e usar facilmente no futuro:
+1. Estratégia de Busca:
+Quando precisar dos componentes, me diga:
+"Preciso dos componentes de formulário Domiex" → Eu te mostro todos
+"Como usar o DomiexInput?" → Te dou exemplos específicos
+"Quero ver a página de exemplos" → Te mostro FormExemplos.tsx
+"Implementar select avançado" → Te guio no DomiexCustomSelect

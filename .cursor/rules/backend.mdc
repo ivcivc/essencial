@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- O backend não está na pasta raiz do projeto e sim na pasta /backend.
+- Usar versão do nodejs v22 ou superior. Usar sempre o npm
+- Tecnologia utilizada ADONISJS 6 @web https://docs.adonisjs.com/guides/preface/introduction
+- Sempre seguir as regras de desenvolvimento padrão do adonisjs. Na dúvida consulte a documentação oficial.
+- O banco de dados escolhido é o MySql 8
+
+
