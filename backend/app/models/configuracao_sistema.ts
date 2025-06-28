@@ -93,7 +93,9 @@ export default class ConfiguracaoSistema extends BaseModel {
       antecedenciaMinima: 60, // minutos
       antecedenciaMaxima: 90, // dias
       permitirAgendamentoPassado: false,
-      toleranciaEdicaoPassado: 60 // minutos
+      toleranciaEdicaoPassado: 60, // minutos
+      permitirMoverConcluido: false,
+      permitirMoverCancelado: false
     })
   }
 }

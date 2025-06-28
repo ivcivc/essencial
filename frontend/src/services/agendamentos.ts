@@ -12,7 +12,8 @@ import type {
   EstatisticasAgendamento,
   AgendamentoListItem,
   AgendamentoCalendarioResponse,
-  AgendamentoCalendario
+  AgendamentoCalendario,
+  ConfiguracaoAgendamentos
 } from '../types/agendamentos'
 import { ConfiguracoesService } from './configuracoes'
 
@@ -313,8 +314,11 @@ export class AgendamentosService {
   /**
    * Verificar se agendamento pode ser editado
    */
-  podeEditar(agendamento: Agendamento): boolean {
-    return !['concluido', 'cancelado'].includes(agendamento.status)
+  podeEditar(agendamento: Agendamento, regras?: ConfiguracaoAgendamentos): boolean {
+    if (agendamento.status === 'concluido' && regras && regras.permitirMoverConcluido === false) return false;
+    if (agendamento.status === 'cancelado' && regras && regras.permitirMoverCancelado === false) return false;
+    if (['concluido', 'cancelado'].includes(agendamento.status) && !regras) return false;
+    return true;
   }
 
   /**

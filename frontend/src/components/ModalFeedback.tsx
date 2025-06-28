@@ -7,6 +7,7 @@ interface ModalFeedbackProps {
   mensagem: string
   detalhes?: string
   tipo?: 'sucesso' | 'erro' | 'alerta' | 'info'
+  onConfirmar?: () => void
 }
 
 const getFeedbackConfig = (tipo: ModalFeedbackProps['tipo']) => {
@@ -44,55 +45,40 @@ const ModalFeedback: React.FC<ModalFeedbackProps> = ({
   titulo,
   mensagem,
   detalhes,
-  tipo = 'info'
+  tipo = 'info',
+  onConfirmar
 }) => {
   if (!isOpen) return null
 
-  const { icon, colorClasses, bgClasses } = getFeedbackConfig(tipo)
-  const isSuccess = tipo === 'sucesso'
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-dark-850 rounded-lg shadow-xl max-w-md w-full mx-4 border border-gray-200 dark:border-dark-700 animate-in zoom-in-95 duration-200">
-        <div className={`p-6 ${isSuccess ? 'text-center' : ''}`}>
-          {/* Cabeçalho */}
-          <div className={`${isSuccess ? 'flex flex-col items-center' : 'flex items-center'} mb-4`}>
-            <div className={`flex-shrink-0 w-16 h-16 ${bgClasses} rounded-full flex items-center justify-center mb-3`}>
-              <i className={`${icon} ${colorClasses} text-4xl`}></i>
-            </div>
-            <div className={`${isSuccess ? '' : 'ml-4'} flex-1`}>
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white">
-                {titulo}
-              </h3>
-            </div>
-          </div>
-
-          {/* Conteúdo */}
-          <div className="mb-6">
-            <p className="text-gray-700 dark:text-gray-300">
-              {mensagem}
-            </p>
-            {!isSuccess && detalhes && (
-              <div className="mt-4 bg-gray-50 dark:bg-dark-800 rounded-md p-3 text-left">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <strong>Detalhes:</strong> {detalhes}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Botões */}
-          <div className="flex justify-center">
-            <button
-              onClick={onClose}
-              className="px-8 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors font-medium shadow-sm"
-            >
-              {isSuccess ? 'Ótimo!' : 'Entendi'}
+    <>
+      {/* Overlay Domiex padrão com z-index máximo */}
+      <div className="fixed inset-0 z-[9999] bg-white/60 dark:bg-dark-900/60 backdrop-blur-xs transition-all" />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div className="w-full max-w-md rounded-lg shadow-xl bg-white dark:bg-dark-850 p-6 relative animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-lg font-semibold">{titulo}</span>
+            <button onClick={onClose} className="text-gray-400 hover:text-primary-500 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
+          </div>
+          <div className="mb-4">
+            <div className="font-medium mb-1">{mensagem}</div>
+            {detalhes && <div className="text-sm text-gray-500 dark:text-dark-300 whitespace-pre-line">{detalhes}</div>}
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            {onConfirmar ? (
+              <>
+                <button onClick={onClose} className="btn btn-sub-gray">Cancelar</button>
+                <button onClick={onConfirmar} className="btn btn-primary">Confirmar movimentação</button>
+              </>
+            ) : (
+              <button onClick={onClose} className="btn btn-primary">Entendi</button>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

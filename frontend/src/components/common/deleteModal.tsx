@@ -40,6 +40,7 @@ const DeleteModal = ({ show, handleHide, deleteModalFunction }: any) => {
           </>
         )}
         footer={() => <></>}
+        modalClassName="z-[9999]"
       />
     </React.Fragment>
   );

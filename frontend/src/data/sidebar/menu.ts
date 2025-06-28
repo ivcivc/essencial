@@ -113,6 +113,13 @@ const menu: MegaMenu[] = [
         dropdownPosition: null,
         children: [],
       },
+      {
+        title: "Regras de Agendamento",
+        lang: "pe-regras-agendamento",
+        link: "/configuracoes/regras-agendamento",
+        dropdownPosition: null,
+        children: [],
+      },
     ],
   },
 ];

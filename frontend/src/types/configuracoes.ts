@@ -37,6 +37,8 @@ export interface ConfiguracaoAgendamentos {
   antecedenciaMaxima: number // dias
   permitirAgendamentoPassado: boolean
   toleranciaEdicaoPassado: number // minutos
+  permitirMoverConcluido?: boolean
+  permitirMoverCancelado?: boolean
 }
 
 export interface DadosClinica {

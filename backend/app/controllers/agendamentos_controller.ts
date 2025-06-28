@@ -298,12 +298,29 @@ export default class AgendamentosController {
         status: agendamento.status
       })
 
-      // Não permitir atualizar agendamentos concluídos ou cancelados
-      if (['concluido', 'cancelado'].includes(agendamento.status)) {
+      // Buscar regras de agendamento do sistema
+      const { permitirMoverConcluido = false, permitirMoverCancelado = false } = await (await import('../models/configuracao_sistema.js')).default.obterConfiguracaoAgendamentos();
+
+      // Detectar tentativa de movimentação (data, hora, parceiro)
+      const movimentouDataHora: boolean =
+        (data.data !== undefined && data.data !== agendamento.dataAgendamento.toSQLDate()) ||
+        (data.dataAgendamento !== undefined && data.dataAgendamento !== agendamento.dataAgendamento.toSQLDate()) ||
+        (data.horaInicio !== undefined && data.horaInicio !== agendamento.horaInicio) ||
+        (data.horaFim !== undefined && data.horaFim !== agendamento.horaFim) ||
+        (data.parceiroId !== undefined && data.parceiroId !== agendamento.parceiroId);
+
+      // Só bloquear se tentou movimentar e a regra não permite
+      if (
+        movimentouDataHora &&
+        (
+          (agendamento.status === 'concluido' && !permitirMoverConcluido) ||
+          (agendamento.status === 'cancelado' && !permitirMoverCancelado)
+        )
+      ) {
         return response.badRequest({
           success: false,
-          message: 'Não é possível atualizar agendamentos concluídos ou cancelados',
-        })
+          message: 'Movimentação de data/hora/parceiro bloqueada por regra administrativa',
+        });
       }
 
       // Verificar se houve mudança significativa que requer validação de disponibilidade

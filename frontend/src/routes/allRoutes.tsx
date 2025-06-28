@@ -136,6 +136,7 @@ import FormLayout from "@pages/forms/formLayout";
 import ConfiguracaoHorarios from "@pages/configuracoes/horarios";
 import TesteHorarios from "@pages/configuracoes/teste-horarios";
 import DisponibilidadeParceiro from "@pages/parceiros/disponibilidade";
+import RegrasAgendamento from '@pages/configuracoes/regras-agendamento'
 
 interface IRoute {
   path: string;
@@ -187,6 +188,7 @@ const routes: IRoute[] = [
   // Configurações do Sistema
   { path: "/configuracoes/horarios", component: <ConfiguracaoHorarios /> },
   { path: "/configuracoes/teste-horarios", component: <TesteHorarios /> },
+  { path: "/configuracoes/regras-agendamento", component: <RegrasAgendamento /> },
   
   // Outras páginas (Analytics do template original)
   { path: "/analytics", component: <Analytics /> },

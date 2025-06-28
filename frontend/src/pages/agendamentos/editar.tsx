@@ -15,6 +15,8 @@ import { SalasService } from '../../services/salas';
 import { agendamentoEditSchema, type AgendamentoEditData } from '../../schemas/agendamentos';
 import ModalNovoPaciente from '../../components/ModalNovoPaciente';
 import BreadCrumb from '../../components/common/breadCrumb';
+import { ConfiguracaoAgendamentos } from '../../types/configuracoes';
+import { Agendamento } from '../../types/agendamentos';
 
 const agendamentosService = new AgendamentosService();
 const configuracoesService = new ConfiguracoesService();
@@ -113,6 +115,9 @@ const EditarAgendamento: React.FC = () => {
     texto: string;
   }>({ tipo: null, texto: '' });
 
+  const [regrasAgendamento, setRegrasAgendamento] = useState<ConfiguracaoAgendamentos | null>(null);
+  const [agendamentoStatus, setAgendamentoStatus] = useState<'agendado' | 'confirmado' | 'em_andamento' | 'concluido' | 'cancelado' | 'nao_compareceu' | ''>('');
+
   // Função para obter data mínima (hoje)
   const getDataMinima = () => {
     return new Date().toISOString().split('T')[0];
@@ -170,12 +175,13 @@ const EditarAgendamento: React.FC = () => {
       const response = await agendamentosService.buscarPorId(parseInt(id));
       if (response.success && response.data) {
         const agendamento = response.data;
+        setAgendamentoStatus((agendamento.status as any) || '');
         
         // Preencher formulário com dados do agendamento
-        setValue('pacienteId', agendamento.pacienteId);
-        setValue('parceiroId', agendamento.parceiroId);
-        setValue('servicoId', agendamento.servicoId);
-        setValue('salaId', agendamento.salaId);
+        setValue('pacienteId', agendamento.pacienteId || 0);
+        setValue('parceiroId', agendamento.parceiroId || 0);
+        setValue('servicoId', agendamento.servicoId || 0);
+        setValue('salaId', agendamento.salaId || 0);
         setValue('data', agendamento.dataAgendamento?.split('T')[0] || '');
         setValue('horaInicio', agendamento.horaInicio || '');
         setValue('duracaoMinutos', agendamento.duracaoMinutos);
@@ -457,6 +463,13 @@ const EditarAgendamento: React.FC = () => {
     }
   }, [horaInicio, duracaoMinutos, setValue]);
 
+  // Buscar regras de agendamento ao carregar
+  useEffect(() => {
+    ConfiguracoesService.buscarRegrasAgendamento().then((config) => {
+      setRegrasAgendamento(config);
+    });
+  }, []);
+
   // Handlers
   const handleServicoChange = (selected: any) => {
     setValue('servicoId', selected ? parseInt(selected.value) : 0);
@@ -549,7 +562,7 @@ const EditarAgendamento: React.FC = () => {
       setResultadoOperacao({
         sucesso: false,
         titulo: 'Erro',
-        mensagem: error.message || 'Erro interno do servidor'
+        mensagem: error.response?.data?.message || error.message || 'Erro interno do servidor'
       });
       setShowModalResultado(true);
     } finally {
@@ -622,6 +635,47 @@ const EditarAgendamento: React.FC = () => {
     { value: 'cancelado', label: 'Cancelado' },
     { value: 'nao_compareceu', label: 'Não Compareceu' }
   ];
+
+  // Função utilitária para criar um objeto mínimo do tipo Agendamento para podeEditar
+  const agendamentoParaValidacao: Agendamento = {
+    id: 0,
+    pacienteId: 0,
+    parceiroId: 0,
+    servicoId: 0,
+    salaId: 0,
+    data: '',
+    horaInicio: '',
+    horaFim: '',
+    duracaoMinutos: 0,
+    status: agendamentoStatus as any,
+    valorServico: 0,
+    valorParceiro: 0,
+    valorPago: false,
+    observacoes: '',
+    observacoesInternas: '',
+    primeiraConsulta: false,
+    requerPreparo: false,
+    instrucoesPreparo: '',
+    horaChegada: null,
+    horaInicioReal: null,
+    horaFimReal: null,
+    agendamentoOriginalId: null,
+    motivoCancelamento: null,
+    lembreteEnviado: false,
+    dataLembrete: null,
+    createdBy: null,
+    updatedBy: null,
+    createdAt: '',
+    updatedAt: ''
+  };
+
+  // Função utilitária para saber se pode mover data/hora
+  const podeMoverDataHora = (status: string, regras?: ConfiguracaoAgendamentos) => {
+    if (!regras) return true;
+    if (status === 'concluido' && regras.permitirMoverConcluido === false) return false;
+    if (status === 'cancelado' && regras.permitirMoverCancelado === false) return false;
+    return true;
+  };
 
   if (loadingData) {
     return (
@@ -771,42 +825,34 @@ const EditarAgendamento: React.FC = () => {
 
           {/* Data e Horários */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="form-label">
-                Data <span className="text-red-500">*</span>
-              </label>
+            <div className="mb-6">
+              <label className="block text-gray-700 dark:text-gray-200 font-medium mb-1">Data do Agendamento</label>
               <input
                 type="date"
                 {...register('data')}
+                disabled={!podeMoverDataHora(agendamentoStatus, regrasAgendamento)}
                 className="form-input w-full"
-                min={getDataMinima()}
               />
-              <p className="text-gray-500 text-sm mt-1">Agendamentos podem ser feitos para hoje em horários futuros</p>
+              {!podeMoverDataHora(agendamentoStatus, regrasAgendamento) && (
+                <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                  Movimentação de data/hora bloqueada por regra administrativa.
+                </div>
+              )}
               {errors.data && <p className="text-red-500 text-sm mt-1">{errors.data.message}</p>}
             </div>
 
-            <div>
-              <label className="form-label">
-                Hora Início <span className="text-red-500">*</span>
-              </label>
-              {horariosDisponiveis.length > 0 ? (
-                <DomiexCustomSelect
-                  options={horariosOptions}
-                  value={horariosOptions.find(opt => opt.value === watch('horaInicio'))}
-                  onChange={handleHorarioChange}
-                  placeholder="Selecione o horário..."
-                  isSearchable={false}
-                  showDescription={false}
-                />
-              ) : (
-                <input
-                  type="time"
-                  {...register('horaInicio')}
-                  className="form-input w-full"
-                />
-              )}
-              {horariosDisponiveis.length === 0 && parceiroSelecionado && data && (
-                <p className="text-amber-600 text-sm mt-1">Parceiro não atende neste dia da semana</p>
+            <div className="mb-6">
+              <label className="block text-gray-700 dark:text-gray-200 font-medium mb-1">Hora de Início</label>
+              <input
+                type="time"
+                {...register('horaInicio')}
+                disabled={!podeMoverDataHora(agendamentoStatus, regrasAgendamento)}
+                className="form-input w-full"
+              />
+              {!podeMoverDataHora(agendamentoStatus, regrasAgendamento) && (
+                <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                  Movimentação de data/hora bloqueada por regra administrativa.
+                </div>
               )}
               {errors.horaInicio && <p className="text-red-500 text-sm mt-1">{errors.horaInicio.message}</p>}
             </div>
@@ -933,14 +979,7 @@ const EditarAgendamento: React.FC = () => {
                 if (isValid) {
                   const formData = getValues();
                   
-                  // Garantir que campos boolean sejam boolean
-                  const dataCorrigida = {
-                    ...formData,
-                    primeiraConsulta: Boolean(formData.primeiraConsulta),
-                    requerPreparo: Boolean(formData.requerPreparo)
-                  };
-                  
-                  await onSubmit(dataCorrigida);
+                  await onSubmit(formData);
                 } else {
                   // Exibir erros em modal
                   const errorEntries = Object.entries(errors);
@@ -998,9 +1037,10 @@ const EditarAgendamento: React.FC = () => {
 
       {/* Modal de Advertência - Data Passada */}
       {showModalAdvertencia && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-dark-850 rounded-lg shadow-lg max-w-lg w-full mx-4">
-            <div className="p-6">
+        <>
+          <div className="fixed inset-0 z-[9999] bg-white/60 dark:bg-dark-900/60 backdrop-blur-xs transition-all" />
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+            <div className="bg-white dark:bg-dark-850 rounded-lg shadow-lg max-w-lg w-full mx-4 p-6">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center mr-4">
                   <i className="las la-exclamation-triangle text-2xl text-yellow-600 dark:text-yellow-400"></i>
@@ -1011,7 +1051,6 @@ const EditarAgendamento: React.FC = () => {
                   </h3>
                 </div>
               </div>
-              
               <div className="mb-6">
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
                   Você está tentando agendar para uma <strong>data e horário no passado</strong>.
@@ -1027,7 +1066,6 @@ const EditarAgendamento: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={cancelarSalvamentoDataPassada}
@@ -1044,14 +1082,15 @@ const EditarAgendamento: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Modal de Resultado */}
       {showModalResultado && resultadoOperacao && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-dark-850 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <div className="p-6">
+        <>
+          <div className="fixed inset-0 z-[9999] bg-white/60 dark:bg-dark-900/60 backdrop-blur-xs transition-all" />
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+            <div className="bg-white dark:bg-dark-850 rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
               <div className="flex items-center mb-4">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
                   resultadoOperacao.sucesso 
@@ -1070,11 +1109,9 @@ const EditarAgendamento: React.FC = () => {
                   </h3>
                 </div>
               </div>
-              
               <p className="text-gray-600 dark:text-gray-300 mb-6 whitespace-pre-line">
                 {resultadoOperacao.mensagem}
               </p>
-              
               <div className="flex justify-end">
                 <button
                   onClick={handleFecharModal}
@@ -1085,7 +1122,7 @@ const EditarAgendamento: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

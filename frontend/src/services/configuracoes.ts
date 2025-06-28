@@ -190,4 +190,20 @@ export class ConfiguracoesService {
 
     return inicioMinutos < fimMinutos
   }
+
+  /**
+   * Buscar regras de movimentação de agendamento
+   */
+  static async buscarRegrasAgendamento() {
+    const response = await api.get('/configuracoes/agendamentos')
+    return response.data.data as ConfiguracaoAgendamentos
+  }
+
+  /**
+   * Salvar regras de movimentação de agendamento
+   */
+  static async salvarRegrasAgendamento(data: Partial<ConfiguracaoAgendamentos>) {
+    const response = await api.put('/configuracoes/agendamentos', data)
+    return response.data
+  }
 } 
