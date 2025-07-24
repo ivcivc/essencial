@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
 import { AgendamentosService } from '../../services/agendamentos'
 import type { Agendamento, AgendamentoFilters } from '../../types/agendamentos'
+import { DomiexSelect } from '../../components/form/DomiexForm'
 
 const agendamentosService = new AgendamentosService()
 
@@ -174,7 +175,8 @@ const AgendamentosLista: React.FC = () => {
       confirmado: 'Confirmado',
       em_andamento: 'Em Andamento',
       concluido: 'Concluído',
-      cancelado: 'Cancelado'
+      cancelado: 'Cancelado',
+      nao_compareceu: 'Não Compareceu'
     }
     return texts[status as keyof typeof texts] || status
   }
@@ -183,8 +185,8 @@ const AgendamentosLista: React.FC = () => {
   const agendamentosFiltrados = agendamentos.filter(agendamento => {
     const matchData = !filtros.data || (agendamento.data || agendamento.dataAgendamento) === filtros.data
     const matchStatus = !filtros.status || agendamento.status === filtros.status
-    const matchParceiro = !filtros.parceiroId || (agendamento.parceiro?.id || agendamento.profissional?.id)?.toString() === filtros.parceiroId
-    const matchBusca = !filtros.busca || 
+    const matchParceiro = !filtros.parceiroId || agendamento.parceiroId?.toString() === filtros.parceiroId
+    const matchBusca = !filtros.busca ||
       agendamento.paciente?.nome?.toLowerCase().includes(filtros.busca.toLowerCase())
     
     return matchData && matchStatus && matchParceiro && matchBusca
@@ -240,37 +242,36 @@ const AgendamentosLista: React.FC = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Status
-            </label>
-            <select 
+            <DomiexSelect
+              label="Status"
               value={filtros.status}
               onChange={(e) => handleFiltroChange('status', e.target.value)}
-              className="form-input"
-            >
-              <option value="">Todos</option>
-              <option value="agendado">Agendado</option>
-              <option value="confirmado">Confirmado</option>
-              <option value="em_andamento">Em Andamento</option>
-              <option value="concluido">Concluído</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
+              options={[
+                { value: '', label: 'Todos' },
+                { value: 'agendado', label: 'Agendado' },
+                { value: 'confirmado', label: 'Confirmado' },
+                { value: 'em_andamento', label: 'Em Andamento' },
+                { value: 'concluido', label: 'Concluído' },
+                { value: 'cancelado', label: 'Cancelado' },
+                { value: 'nao_compareceu', label: 'Não Compareceu' }
+              ]}
+              placeholder="Selecione o status"
+            />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Profissional
-            </label>
-            <select 
-              value={filtros.profissionalId}
-              onChange={(e) => handleFiltroChange('profissionalId', e.target.value)}
-              className="form-input"
-            >
-              <option value="">Todos</option>
-              <option value="1">Dr. João Santos</option>
-              <option value="2">Dra. Maria Costa</option>
-              <option value="3">Ana Paula Ribeiro</option>
-            </select>
+            <DomiexSelect
+              label="Profissional"
+              value={filtros.parceiroId}
+              onChange={(e) => handleFiltroChange('parceiroId', e.target.value)}
+              options={[
+                { value: '', label: 'Todos' },
+                { value: '1', label: 'Dr. João Santos' },
+                { value: '2', label: 'Dra. Maria Costa' },
+                { value: '3', label: 'Ana Paula Ribeiro' }
+              ]}
+              placeholder="Selecione o profissional"
+            />
           </div>
           
           <div>
@@ -344,20 +345,20 @@ const AgendamentosLista: React.FC = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {agendamento.paciente?.nome || agendamento.paciente?.nomeCompleto || 'Paciente'}
+                            {agendamento.paciente?.nome || 'Paciente'}
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {agendamento.paciente?.telefone || agendamento.paciente?.whatsapp || 'N/A'}
+                            {agendamento.paciente?.telefone || 'N/A'}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">{agendamento.servico?.nome || 'Serviço'}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{agendamento.servico?.duracaoMinutos || agendamento.servico?.duracao || 0} min</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{agendamento.servico?.duracaoMinutos || 0} min</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white">{agendamento.parceiro?.nome || agendamento.profissional?.nome || 'Parceiro'}</div>
+                      <div className="text-sm text-gray-900 dark:text-white">{agendamento.parceiro?.nome || 'Parceiro'}</div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">{agendamento.sala?.nome || 'Sala não definida'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -463,19 +464,19 @@ const AgendamentosLista: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Paciente</label>
-                  <p className="text-gray-900 dark:text-white">{modalVisualizar.agendamento.paciente?.nome || modalVisualizar.agendamento.paciente?.nomeCompleto || 'Paciente'}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{modalVisualizar.agendamento.paciente?.telefone || modalVisualizar.agendamento.paciente?.whatsapp || 'N/A'}</p>
+                  <p className="text-gray-900 dark:text-white">{modalVisualizar.agendamento.paciente?.nome || 'Paciente'}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{modalVisualizar.agendamento.paciente?.telefone || 'N/A'}</p>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Serviço</label>
                   <p className="text-gray-900 dark:text-white">{modalVisualizar.agendamento.servico?.nome || 'Serviço'}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Duração: {modalVisualizar.agendamento.servico?.duracaoMinutos || modalVisualizar.agendamento.servico?.duracao || 0} minutos</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Duração: {modalVisualizar.agendamento.servico?.duracaoMinutos || 0} minutos</p>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Profissional</label>
-                  <p className="text-gray-900 dark:text-white">{modalVisualizar.agendamento.parceiro?.nome || modalVisualizar.agendamento.profissional?.nome || 'Parceiro'}</p>
+                  <p className="text-gray-900 dark:text-white">{modalVisualizar.agendamento.parceiro?.nome || 'Parceiro'}</p>
                 </div>
                 
                 <div>

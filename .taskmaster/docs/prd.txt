@@ -1,0 +1,52 @@
+# Overview  
+Sistema de Gestão Integrada para Clínica de Saúde Integrativa "Essencial". Plataforma web (e futura mobile) para otimizar a gestão clínica, melhorar a experiência do paciente e facilitar a coordenação entre profissionais parceiros. Resolve problemas de organização, agendamento, controle financeiro e integração de informações, sendo valioso para clínicas de saúde integrativa que buscam eficiência, segurança e escalabilidade.
+
+# Core Features  
+- **Gestão de Pacientes:** Cadastro completo, prontuário eletrônico unificado, anexos, busca avançada.
+- **Gestão de Salas:** Cadastro, visualização de ocupação integrada ao agendamento.
+- **Gestão de Parceiros (Profissionais):** Cadastro, configuração de disponibilidade visual, associação de serviços, lógica financeira (sublocação, porcentagem, porcentagem com produto do parceiro).
+- **Gestão de Produtos, Serviços & Estoque:** Cadastro de serviços/produtos, controle de estoque, baixa automática, agrupamento de serviços.
+- **Agendamento e Atendimento:** Calendário visual, filtros, exibição clara de disponibilidade, lembretes automáticos, registro de check-in/checkout, integração financeira.
+- **Financeiro:** Gestão de contas, lançamentos a pagar/receber, classificação, acerto com parceiros, recálculo automático de saldos, relatórios básicos.
+- **Segurança e Perfis de Usuário:** Controle de acesso, conformidade LGPD, logs, backup.
+- **Notificações:** Internas e externas (lembretes, avisos de agendamento).
+
+# User Experience  
+- **Personas:** Administrador, Recepcionista/Atendente, Profissional Parceiro, (Opcional) Gestor Financeiro.
+- **User Flows:**
+  - Recepcionista cadastra paciente, agenda consulta, visualiza disponibilidade de salas/profissionais.
+  - Profissional acessa agenda própria, registra evolução, consulta prontuário.
+  - Administrador acompanha relatórios, gerencia parceiros, controla finanças.
+- **UX Considerations:** Interface limpa, responsiva, fácil de usar, com feedback visual claro, especialmente em agendamento e controle financeiro. Acesso rápido a informações críticas (disponibilidade, saldos, repasses).
+
+# Technical Architecture  
+- **Frontend:** React 19 (Domiex), Vite, Tailwind, integração com API REST. Utilizar apenas componentes Domiex, conforme documentação e exemplos do template.
+- **Backend:** AdonisJS 6, MySQL 8.0, arquitetura RESTful, autenticação, controle de acesso, integrações futuras (WhatsApp, NFS-e).
+- **Principais Modelos:** Paciente, Profissional, Sala, Serviço, Produto, Agendamento, Prontuário, Conta Financeira, Lançamento, Usuário.
+- **APIs:** CRUD completo para todos os módulos, endpoints para agendamento, relatórios, integrações externas.
+- **Infraestrutura:** Hospedagem web, backup regular, escalabilidade prevista.
+
+# Development Roadmap  
+- **MVP:**
+  - Gestão de pacientes, salas, profissionais, serviços/produtos, agendamento, financeiro básico, autenticação, controle de acesso, interface web responsiva.
+- **Fases Futuras:**
+  - Aplicativo mobile, integrações (WhatsApp, NFS-e), relatórios gerenciais avançados, dashboard inicial, conciliação bancária, lista de espera, notificações automáticas, melhorias UX.
+
+# Logical Dependency Chain
+- 1. Autenticação e controle de acesso
+- 2. Cadastro de pacientes, profissionais, salas, serviços/produtos
+- 3. Módulo de agendamento (depende dos cadastros)
+- 4. Prontuário eletrônico e anexos (depende de pacientes e agendamentos)
+- 5. Módulo financeiro (depende de agendamentos, profissionais, serviços)
+- 6. Relatórios e integrações (depende dos módulos anteriores)
+- 7. Mobile e recursos avançados
+
+# Risks and Mitigations  
+- **Desafios Técnicos:** Integração entre módulos, regras financeiras complexas, UX para agendamento.
+- **MVP:** Foco em funcionalidades essenciais, entregas incrementais.
+- **Recursos:** Planejar arquitetura escalável, documentação clara, testes automatizados.
+
+# Appendix  
+- **Referências:** prompt-frontend-backend.md, documentação Domiex, AdonisJS, exemplos de PRD.
+- **Tecnologias:** React 19, Vite, Tailwind, AdonisJS 6, MySQL 8.0.
+- **Critérios de Sucesso:** Adoção pela equipe, redução de erros, otimização do tempo, controle financeiro preciso, satisfação dos usuários. 
