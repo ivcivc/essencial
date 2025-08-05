@@ -1,21 +1,11 @@
 import { z } from 'zod';
 import { parseMoney, isValidCPFCNPJ } from '../utils/formatters';
 
-// Schema para disponibilidade de um dia
-const diaDisponibilidadeSchema = z.object({
+// Schema para período de disponibilidade
+const periodoSchema = z.object({
   inicio: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido (HH:MM)'),
-  fim: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido (HH:MM)'),
-  ativo: z.boolean()
-}).optional();
-
-// Schema para disponibilidade por dia
-const disponibilidadeDiaSchema = z.object({
-  inicio: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido (HH:MM)'),
-  fim: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido (HH:MM)'),
-  ativo: z.boolean()
+  fim: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido (HH:MM)')
 }).refine(data => {
-  if (!data.ativo) return true // Se inativo, não validar horários
-  
   const [inicioH, inicioM] = data.inicio.split(':').map(Number)
   const [fimH, fimM] = data.fim.split(':').map(Number)
   const inicioMinutos = inicioH * 60 + inicioM
@@ -24,6 +14,44 @@ const disponibilidadeDiaSchema = z.object({
   return inicioMinutos < fimMinutos
 }, {
   message: 'Horário de início deve ser anterior ao horário de fim'
+});
+
+// Schema para disponibilidade de um dia
+const diaDisponibilidadeSchema = z.object({
+  ativo: z.boolean(),
+  periodos: z.array(periodoSchema).default([])
+}).optional();
+
+// Schema para disponibilidade por dia
+const disponibilidadeDiaSchema = z.object({
+  ativo: z.boolean(),
+  periodos: z.array(periodoSchema).default([])
+}).refine(data => {
+  if (!data.ativo) return true // Se inativo, não validar horários
+  if (data.periodos.length === 0) return false // Se ativo, precisa ter pelo menos um período
+  
+  // Verificar sobreposição de períodos
+  for (let i = 0; i < data.periodos.length; i++) {
+    for (let j = i + 1; j < data.periodos.length; j++) {
+      const [inicioH1, inicioM1] = data.periodos[i].inicio.split(':').map(Number)
+      const [fimH1, fimM1] = data.periodos[i].fim.split(':').map(Number)
+      const [inicioH2, inicioM2] = data.periodos[j].inicio.split(':').map(Number)
+      const [fimH2, fimM2] = data.periodos[j].fim.split(':').map(Number)
+      
+      const inicio1 = inicioH1 * 60 + inicioM1
+      const fim1 = fimH1 * 60 + fimM1
+      const inicio2 = inicioH2 * 60 + inicioM2
+      const fim2 = fimH2 * 60 + fimM2
+      
+      if ((inicio1 < fim2 && inicio2 < fim1)) {
+        return false // Períodos sobrepostos
+      }
+    }
+  }
+  
+  return true
+}, {
+  message: 'Dia ativo precisa ter períodos e não pode ter períodos sobrepostos'
 })
 
 // Schema para disponibilidade completa

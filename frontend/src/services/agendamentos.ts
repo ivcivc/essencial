@@ -16,6 +16,7 @@ import type {
   ConfiguracaoAgendamentos
 } from '../types/agendamentos'
 import { ConfiguracoesService } from './configuracoes'
+import { ParceirosService } from './parceiros'
 
 export class AgendamentosService {
   private baseUrl = '/agendamentos'
@@ -312,6 +313,65 @@ export class AgendamentosService {
   }
 
   /**
+   * Verificar disponibilidade de profissional em um horário específico
+   */
+  async verificarDisponibilidadeProfissional(
+    profissionalId: number,
+    data: string,
+    horaInicio: string,
+    horaFim: string
+  ): Promise<boolean> {
+    // Obter dia da semana (0 = domingo, 1 = segunda, ..., 6 = sábado)
+    const dataObj = new Date(data);
+    const diaSemana = dataObj.getDay();
+    const diasMap = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+    const diaKey = diasMap[diaSemana];
+    
+    try {
+      // Obter disponibilidade do profissional
+      const response = await ParceirosService.obterDisponibilidade(profissionalId);
+      
+      if (!response.success || !response.data) {
+        return false;
+      }
+      
+      const disponibilidade = response.data.disponibilidade;
+      
+      // Verificar se o dia está ativo
+      if (!disponibilidade[diaKey]?.ativo) {
+        return false;
+      }
+      
+      // Converter horários para minutos para facilitar comparação
+      const [inicioH, inicioM] = horaInicio.split(':').map(Number);
+      const [fimH, fimM] = horaFim.split(':').map(Number);
+      const inicioMinutos = inicioH * 60 + inicioM;
+      const fimMinutos = fimH * 60 + fimM;
+      
+      // Verificar se o horário está dentro de algum período do profissional
+      const periodos = disponibilidade[diaKey].periodos || [];
+      
+      for (const periodo of periodos) {
+        const [pInicioH, pInicioM] = periodo.inicio.split(':').map(Number);
+        const [pFimH, pFimM] = periodo.fim.split(':').map(Number);
+        const pInicioMinutos = pInicioH * 60 + pInicioM;
+        const pFimMinutos = pFimH * 60 + pFimM;
+        
+        // Se o horário do agendamento está contido no período do profissional
+        if (inicioMinutos >= pInicioMinutos && fimMinutos <= pFimMinutos) {
+          return true;
+        }
+      }
+      
+      // Se chegou aqui, não está disponível em nenhum período
+      return false;
+    } catch (error) {
+      console.error('Erro ao verificar disponibilidade do profissional:', error);
+      return false;
+    }
+  }
+
+  /**
    * Verificar se agendamento pode ser editado
    */
   podeEditar(agendamento: Agendamento, regras?: ConfiguracaoAgendamentos): boolean {
@@ -400,4 +460,4 @@ export class AgendamentosService {
 }
 
 // Instância singleton do service
-export const agendamentosService = new AgendamentosService() 
+export const agendamentosService = new AgendamentosService()

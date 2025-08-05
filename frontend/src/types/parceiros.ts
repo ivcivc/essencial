@@ -1,13 +1,13 @@
 export type TipoParceria = 'sublocacao' | 'porcentagem' | 'porcentagem_produto';
 
 export interface Disponibilidade {
-  seg?: { inicio: string; fim: string; ativo: boolean };
-  ter?: { inicio: string; fim: string; ativo: boolean };
-  qua?: { inicio: string; fim: string; ativo: boolean };
-  qui?: { inicio: string; fim: string; ativo: boolean };
-  sex?: { inicio: string; fim: string; ativo: boolean };
-  sab?: { inicio: string; fim: string; ativo: boolean };
-  dom?: { inicio: string; fim: string; ativo: boolean };
+  seg?: { ativo: boolean; periodos: Array<{ inicio: string; fim: string }> };
+  ter?: { ativo: boolean; periodos: Array<{ inicio: string; fim: string }> };
+  qua?: { ativo: boolean; periodos: Array<{ inicio: string; fim: string }> };
+  qui?: { ativo: boolean; periodos: Array<{ inicio: string; fim: string }> };
+  sex?: { ativo: boolean; periodos: Array<{ inicio: string; fim: string }> };
+  sab?: { ativo: boolean; periodos: Array<{ inicio: string; fim: string }> };
+  dom?: { ativo: boolean; periodos: Array<{ inicio: string; fim: string }> };
 }
 
 export interface BloqueioData {
@@ -129,10 +129,14 @@ export interface ServicosResponse {
   data: ServicoSimples[];
 }
 
-export interface DisponibilidadeDia {
+export interface DisponibilidadePeriodo {
   inicio: string
   fim: string
+}
+
+export interface DisponibilidadeDia {
   ativo: boolean
+  periodos: DisponibilidadePeriodo[]
 }
 
 export interface DisponibilidadeParceiro {

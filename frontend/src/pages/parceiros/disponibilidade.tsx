@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
 import { ParceirosService } from '../../services/parceiros'
 import { disponibilidadeParceiroSchema } from '../../schemas/parceiros'
 import type { DisponibilidadeFormData } from '../../types/parceiros'
 import BreadCrumb from '../../components/common/breadCrumb'
+import DiaParceiro from '../../components/DiaParceiro'
 
 const DisponibilidadeParceiro: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -20,7 +21,7 @@ const DisponibilidadeParceiro: React.FC = () => {
   // Modal de sucesso
   const [showSuccessModal, setShowSuccessModal] = useState(false)
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<DisponibilidadeFormData>({
+  const { register, handleSubmit, setValue, watch, control, formState: { errors } } = useForm<DisponibilidadeFormData>({
     resolver: zodResolver(disponibilidadeParceiroSchema),
     defaultValues: {
       parceiroId: Number(id),
@@ -111,15 +112,16 @@ const DisponibilidadeParceiro: React.FC = () => {
   // Função para aplicar horário padrão a todos os dias
   const aplicarHorarioPadrao = () => {
     const horarioPadrao = {
-      inicio: '08:00',
-      fim: '18:00',
-      ativo: true
+      ativo: true,
+      periodos: [
+        { inicio: '08:00', fim: '12:00' },
+        { inicio: '14:00', fim: '18:00' }
+      ]
     }
 
     diasSemana.forEach(dia => {
-      setValue(`disponibilidade.${dia.key}.inicio`, horarioPadrao.inicio)
-      setValue(`disponibilidade.${dia.key}.fim`, horarioPadrao.fim)
       setValue(`disponibilidade.${dia.key}.ativo`, horarioPadrao.ativo)
+      setValue(`disponibilidade.${dia.key}.periodos`, [...horarioPadrao.periodos])
     })
 
     toast.success('Horário padrão aplicado a todos os dias')
@@ -129,9 +131,8 @@ const DisponibilidadeParceiro: React.FC = () => {
   const copiarHorario = (diaOrigem: string, diaDestino: string) => {
     const horarioOrigem = watch(`disponibilidade.${diaOrigem}`)
     
-    setValue(`disponibilidade.${diaDestino}.inicio`, horarioOrigem.inicio)
-    setValue(`disponibilidade.${diaDestino}.fim`, horarioOrigem.fim)
     setValue(`disponibilidade.${diaDestino}.ativo`, horarioOrigem.ativo)
+    setValue(`disponibilidade.${diaDestino}.periodos`, [...horarioOrigem.periodos])
 
     toast.success(`Horário copiado de ${diaOrigem} para ${diaDestino}`)
   }
@@ -183,100 +184,19 @@ const DisponibilidadeParceiro: React.FC = () => {
           {/* Grid de dias da semana */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {diasSemana.map((dia) => (
-              <div
-                key={dia.key}
-                className="p-4 bg-gray-50 dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700"
-              >
-                {/* Cabeçalho do dia */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        {...register(`disponibilidade.${dia.key}.ativo`)}
-                        className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <span className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        {dia.nome}
-                      </span>
-                    </label>
-                  </div>
+              <div key={dia.key} className="relative">
+                {/* Removido o posicionamento absoluto do menu de ações */}
 
-                  {/* Menu de ações */}
-                  <div className="relative">
-                    <select
-                      onChange={(e) => {
-                        if (e.target.value && e.target.value !== dia.key) {
-                          copiarHorario(e.target.value, dia.key)
-                          e.target.value = '' // Reset
-                        }
-                      }}
-                      className="text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-600 dark:text-gray-400"
-                    >
-                      <option value="">Copiar de...</option>
-                      {diasSemana
-                        .filter(d => d.key !== dia.key)
-                        .map(d => (
-                          <option key={d.key} value={d.key}>{d.abrev}</option>
-                        ))
-                      }
-                    </select>
-                  </div>
-                </div>
-
-                {/* Horários */}
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Início
-                      </label>
-                      <input
-                        type="time"
-                        {...register(`disponibilidade.${dia.key}.inicio`)}
-                        disabled={!watch(`disponibilidade.${dia.key}.ativo`)}
-                        className="form-input disabled:opacity-50 disabled:cursor-not-allowed [color-scheme:dark]"
-                      />
-                      {errors.disponibilidade?.[dia.key as keyof typeof errors.disponibilidade]?.inicio && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.disponibilidade[dia.key as keyof typeof errors.disponibilidade]?.inicio?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Fim
-                      </label>
-                      <input
-                        type="time"
-                        {...register(`disponibilidade.${dia.key}.fim`)}
-                        disabled={!watch(`disponibilidade.${dia.key}.ativo`)}
-                        className="form-input disabled:opacity-50 disabled:cursor-not-allowed [color-scheme:dark]"
-                      />
-                      {errors.disponibilidade?.[dia.key as keyof typeof errors.disponibilidade]?.fim && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.disponibilidade[dia.key as keyof typeof errors.disponibilidade]?.fim?.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status visual */}
-                  <div className="text-xs">
-                    {watch(`disponibilidade.${dia.key}.ativo`) ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 rounded">
-                        <i className="las la-check-circle"></i>
-                        Ativo: {watch(`disponibilidade.${dia.key}.inicio`)} às {watch(`disponibilidade.${dia.key}.fim`)}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded">
-                        <i className="las la-times-circle"></i>
-                        Inativo
-                      </span>
-                    )}
-                  </div>
-                </div>
+                {/* Componente DiaParceiro */}
+                <DiaParceiro
+                  dia={dia.key as keyof DisponibilidadeFormData['disponibilidade']}
+                  nome={dia.nome}
+                  register={register}
+                  control={control}
+                  watch={watch}
+                  setValue={setValue}
+                  errors={errors}
+                />
               </div>
             ))}
           </div>

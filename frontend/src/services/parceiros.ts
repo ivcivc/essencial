@@ -247,13 +247,49 @@ export class ParceirosService {
    */
   static obterDisponibilidadePadrao(): any {
     return {
-      seg: { inicio: '08:00', fim: '18:00', ativo: true },
-      ter: { inicio: '08:00', fim: '18:00', ativo: true },
-      qua: { inicio: '08:00', fim: '18:00', ativo: true },
-      qui: { inicio: '08:00', fim: '18:00', ativo: true },
-      sex: { inicio: '08:00', fim: '17:00', ativo: true },
-      sab: { inicio: '08:00', fim: '12:00', ativo: false },
-      dom: { inicio: '08:00', fim: '12:00', ativo: false }
+      seg: { 
+        ativo: true, 
+        periodos: [
+          { inicio: '08:00', fim: '12:00' },
+          { inicio: '14:00', fim: '18:00' }
+        ] 
+      },
+      ter: { 
+        ativo: true, 
+        periodos: [
+          { inicio: '08:00', fim: '12:00' },
+          { inicio: '14:00', fim: '18:00' }
+        ] 
+      },
+      qua: { 
+        ativo: true, 
+        periodos: [
+          { inicio: '08:00', fim: '12:00' },
+          { inicio: '14:00', fim: '18:00' }
+        ] 
+      },
+      qui: { 
+        ativo: true, 
+        periodos: [
+          { inicio: '08:00', fim: '12:00' },
+          { inicio: '14:00', fim: '18:00' }
+        ] 
+      },
+      sex: { 
+        ativo: true, 
+        periodos: [
+          { inicio: '08:00', fim: '12:00' },
+          { inicio: '13:00', fim: '17:00' }
+        ] 
+      },
+      sab: { 
+        ativo: false, 
+        periodos: [] 
+      },
+      dom: { 
+        ativo: false, 
+        periodos: [] 
+      }
     };
   }
 
@@ -268,7 +304,7 @@ export class ParceirosService {
     const diaKey = typeof diaSemana === 'string' ? diaSemana : mapeamentoDias[diaSemana];
     const diaConfig = disponibilidade?.[diaKey];
     
-    return diaConfig?.ativo === true;
+    return diaConfig?.ativo === true && Array.isArray(diaConfig?.periodos) && diaConfig.periodos.length > 0;
   }
 
   /**

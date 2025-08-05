@@ -365,27 +365,31 @@ interface ParceiroForm {
 
 **Funcionalidades:**
 - ✅ **Interface Visual** - Configuração intuitiva
-- ✅ **Múltiplos Períodos** - Manhã/tarde/noite
+- ✅ **Múltiplos Períodos por Dia** - Manhã/tarde/noite com horários flexíveis
 - ✅ **Dias da Semana** - Configuração individual
-- ✅ **Horários Flexíveis** - Início e fim personalizáveis
-- ✅ **Validação de Horários** - Início antes do fim
+- ✅ **Adição/Remoção de Períodos** - Gerenciamento dinâmico de horários
+- ✅ **Validação Avançada** - Início antes do fim e sem sobreposição de períodos
 
 #### Estrutura de Disponibilidade:
 ```typescript
+interface DisponibilidadePeriodo {
+  inicio: string  // "08:00"
+  fim: string     // "12:00"
+}
+
+interface DisponibilidadeDia {
+  ativo: boolean
+  periodos: DisponibilidadePeriodo[]
+}
+
 interface DisponibilidadeParceiro {
-  segunda: {
-    ativo: boolean
-    horarios: Array<{
-      inicio: string  // "09:00"
-      fim: string     // "17:00"
-    }>
-  }
-  terca: { /* mesma estrutura */ }
-  quarta: { /* mesma estrutura */ }
-  quinta: { /* mesma estrutura */ }
-  sexta: { /* mesma estrutura */ }
-  sabado: { /* mesma estrutura */ }
-  domingo: { /* mesma estrutura */ }
+  seg: DisponibilidadeDia
+  ter: DisponibilidadeDia
+  qua: DisponibilidadeDia
+  qui: DisponibilidadeDia
+  sex: DisponibilidadeDia
+  sab: DisponibilidadeDia
+  dom: DisponibilidadeDia
 }
 ```
 
