@@ -300,22 +300,27 @@ export default class ConfiguracoesController {
           })
         }
 
-        // Cruzar horários da clínica com disponibilidade do parceiro
-        const horarioParceiro = {
-          inicio: diaParceiro.inicio,
-          fim: diaParceiro.fim
+        // Usar os períodos de disponibilidade do parceiro
+        // Cada dia tem um array de períodos com início e fim
+        if (!diaParceiro.periodos || !Array.isArray(diaParceiro.periodos) || diaParceiro.periodos.length === 0) {
+          return response.ok({
+            success: true,
+            data: [],
+            message: 'Parceiro não possui períodos configurados para este dia',
+          })
         }
 
-        // NOVA LÓGICA: Se o parceiro tem horários específicos, usar os horários do parceiro
-        // em vez de fazer interseção com os horários da clínica
-        // Isso permite que parceiros atendam fora do horário normal da clínica
-        periodosDisponiveis = [{
-          inicio: horarioParceiro.inicio,
-          fim: horarioParceiro.fim
-        }]
+        // Usar todos os períodos disponíveis do parceiro para este dia
+        periodosDisponiveis = diaParceiro.periodos.map(periodo => ({
+          inicio: periodo.inicio,
+          fim: periodo.fim
+        }))
 
         // Adicionar mensagem informativa
-        mensagemHorario = `Horários baseados na disponibilidade do parceiro (${horarioParceiro.inicio} às ${horarioParceiro.fim})`
+        const periodosTexto = diaParceiro.periodos
+          .map(p => `${p.inicio} às ${p.fim}`)
+          .join(', ')
+        mensagemHorario = `Horários baseados na disponibilidade do parceiro (${periodosTexto})`
       }
 
       // Gerar slots baseado nos períodos disponíveis

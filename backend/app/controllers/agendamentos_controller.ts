@@ -194,18 +194,36 @@ export default class AgendamentosController {
       const diaParceiro = disponibilidadeParceiro[diaParceiroKey]
       const horaInicioVerificacao = data.horaInicio
       
-      const [parceiroInicioH, parceiroInicioM] = diaParceiro.inicio.split(':').map(Number)
-      const [parceiroFimH, parceiroFimM] = diaParceiro.fim.split(':').map(Number)
-      const [agendInicioH, agendInicioM] = horaInicioVerificacao.split(':').map(Number)
-      
-      const parceiroInicioMin = parceiroInicioH * 60 + parceiroInicioM
-      const parceiroFimMin = parceiroFimH * 60 + parceiroFimM
-      const agendInicioMin = agendInicioH * 60 + agendInicioM
-      
-      if (agendInicioMin < parceiroInicioMin || agendInicioMin >= parceiroFimMin) {
+      // Verificar se o parceiro tem períodos configurados para este dia
+      if (!diaParceiro.periodos || !Array.isArray(diaParceiro.periodos) || diaParceiro.periodos.length === 0) {
         return response.badRequest({
           success: false,
-          message: `Horário fora da disponibilidade do parceiro. ${parceiro.nomeCompleto} atende das ${diaParceiro.inicio} às ${diaParceiro.fim} às ${diaSemana}s`,
+          message: `${parceiro.nomeCompleto} não possui períodos configurados para ${diaSemana}s`,
+        })
+      }
+      
+      const [agendInicioH, agendInicioM] = horaInicioVerificacao.split(':').map(Number)
+      const agendInicioMin = agendInicioH * 60 + agendInicioM
+      
+      // Verificar se o horário está dentro de algum dos períodos disponíveis
+      const horarioDentroPeriodo = diaParceiro.periodos.some(periodo => {
+        const [inicioH, inicioM] = periodo.inicio.split(':').map(Number)
+        const [fimH, fimM] = periodo.fim.split(':').map(Number)
+        
+        const inicioMin = inicioH * 60 + inicioM
+        const fimMin = fimH * 60 + fimM
+        
+        return agendInicioMin >= inicioMin && agendInicioMin < fimMin
+      })
+      
+      if (!horarioDentroPeriodo) {
+        const periodosTexto = diaParceiro.periodos
+          .map(p => `${p.inicio} às ${p.fim}`)
+          .join(', ')
+        
+        return response.badRequest({
+          success: false,
+          message: `Horário fora da disponibilidade do parceiro. ${parceiro.nomeCompleto} atende nos seguintes períodos às ${diaSemana}s: ${periodosTexto}`,
         })
       }
 
@@ -389,18 +407,36 @@ export default class AgendamentosController {
         const diaParceiro = disponibilidadeParceiro[diaParceiroKey]
         const horaInicioVerificacao = horaVerificacao
         
-        const [parceiroInicioH, parceiroInicioM] = diaParceiro.inicio.split(':').map(Number)
-        const [parceiroFimH, parceiroFimM] = diaParceiro.fim.split(':').map(Number)
-        const [agendInicioH, agendInicioM] = horaInicioVerificacao.split(':').map(Number)
-        
-        const parceiroInicioMin = parceiroInicioH * 60 + parceiroInicioM
-        const parceiroFimMin = parceiroFimH * 60 + parceiroFimM
-        const agendInicioMin = agendInicioH * 60 + agendInicioM
-        
-        if (agendInicioMin < parceiroInicioMin || agendInicioMin >= parceiroFimMin) {
+        // Verificar se o parceiro tem períodos configurados para este dia
+        if (!diaParceiro.periodos || !Array.isArray(diaParceiro.periodos) || diaParceiro.periodos.length === 0) {
           return response.badRequest({
             success: false,
-            message: `Horário fora da disponibilidade do parceiro. ${parceiro.nomeCompleto} atende das ${diaParceiro.inicio} às ${diaParceiro.fim} às ${diaSemana}s`,
+            message: `${parceiro.nomeCompleto} não possui períodos configurados para ${diaSemana}s`,
+          })
+        }
+        
+        const [agendInicioH, agendInicioM] = horaInicioVerificacao.split(':').map(Number)
+        const agendInicioMin = agendInicioH * 60 + agendInicioM
+        
+        // Verificar se o horário está dentro de algum dos períodos disponíveis
+        const horarioDentroPeriodo = diaParceiro.periodos.some(periodo => {
+          const [inicioH, inicioM] = periodo.inicio.split(':').map(Number)
+          const [fimH, fimM] = periodo.fim.split(':').map(Number)
+          
+          const inicioMin = inicioH * 60 + inicioM
+          const fimMin = fimH * 60 + fimM
+          
+          return agendInicioMin >= inicioMin && agendInicioMin < fimMin
+        })
+        
+        if (!horarioDentroPeriodo) {
+          const periodosTexto = diaParceiro.periodos
+            .map(p => `${p.inicio} às ${p.fim}`)
+            .join(', ')
+          
+          return response.badRequest({
+            success: false,
+            message: `Horário fora da disponibilidade do parceiro. ${parceiro.nomeCompleto} atende nos seguintes períodos às ${diaSemana}s: ${periodosTexto}`,
           })
         }
 

@@ -513,6 +513,13 @@ const NovoAgendamento: React.FC = () => {
     
     // Limpar sala quando alterar serviço
     setValue('salaId', 0)
+    
+    // Regenerar horários quando o serviço mudar (pode afetar duração e disponibilidade)
+    const data = watch('data')
+    const parceiroId = watch('parceiroId')
+    if (data && parceiroId > 0) {
+      gerarHorariosDisponiveis(data, parceiroId)
+    }
   }
 
   // Nota: Validação de data/hora agora é feita pelo schema Zod
@@ -660,6 +667,13 @@ const NovoAgendamento: React.FC = () => {
     } else {
       // Se não há valor selecionado, limpar o campo mas não definir como null
       setValue('salaId', 0)
+    }
+    
+    // Regenerar horários quando a sala mudar (pode afetar disponibilidade por conflitos)
+    const data = watch('data')
+    const parceiroId = watch('parceiroId')
+    if (data && parceiroId > 0) {
+      gerarHorariosDisponiveis(data, parceiroId)
     }
   }
 

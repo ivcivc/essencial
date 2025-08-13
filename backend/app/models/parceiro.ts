@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, beforeSave, afterFind } from '@adonisjs/lucid/orm'
+import { BaseModel, column, beforeSave, afterFind, afterFetch } from '@adonisjs/lucid/orm'
 
 export type TipoParceria = 'sublocacao' | 'porcentagem' | 'porcentagem_produto'
 
@@ -136,6 +136,15 @@ export default class Parceiro extends BaseModel {
 
   @afterFind()
   static async deserializeJsonFields(parceiro: Parceiro) {
+    this.deserializeFields(parceiro)
+  }
+
+  @afterFetch()
+  static async deserializeJsonFieldsMultiple(parceiros: Parceiro[]) {
+    parceiros.forEach(parceiro => this.deserializeFields(parceiro))
+  }
+
+  private static deserializeFields(parceiro: Parceiro) {
     if (parceiro.especialidades && typeof parceiro.especialidades === 'string') {
       try {
         parceiro.especialidades = JSON.parse(parceiro.especialidades)
